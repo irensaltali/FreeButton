@@ -2,7 +2,7 @@ class FreeButton{
     public:
         typedef void (*f)();
         FreeButton();
-        FreeButton(int pin, bool pullup_enable=true, bool active_low=false);
+        FreeButton(int pin, bool pullup_enable=true);
         int Read();
         void OnPressed(f callback);
         void OnUnPressed(f callback);
@@ -13,13 +13,12 @@ class FreeButton{
         f _pressed_callback;
         f _un_pressed_callback;
         f _pressed_for_duration_callback;
-        int lastState;
-        bool safeRead();
+        bool SafeRead();
 
     private:
         int _currentPin;
+        int _lastState;
         unsigned int _longPressDuration;
         unsigned int _debouncedTime;
-        int _active_low;
-
+        unsigned long _lastPressed;
 };

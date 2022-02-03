@@ -5,35 +5,41 @@ FreeButton::FreeButton()
 {
 }
 
-FreeButton::FreeButton(int pin, bool pullup_enable = true, bool active_low = false)
+FreeButton::FreeButton(int pin, bool pullup_enable = true)
 {
     // pinMode(pin, pullup_enable ? INPUT_PULLUP : INPUT);
     pinMode(pin, INPUT_PULLUP);
     SetPin(pin);
-    _active_low=active_low;
 }
 
 int FreeButton::Read()
 {
-    int val = safeRead();
-    
-    if(_active_low){
-      val=!val;
-    }
-    if(val)
-      Serial.println("_currentPin:" + String(_currentPin) + ", val: "+String(val));
+  int val = SafeRead();
 
-    if(_pressed_callback && val){
-      _pressed_callback();
-    }
-    else if(_un_pressed_callback && lastState == HIGH && val){
-      _un_pressed_callback();
-    }
-    lastState=val;
+  if(_pressed_callback && val){
+    _pressed_callback();
+  }
+  else if(_un_pressed_callback && _lastState == HIGH){
+    _un_pressed_callback();
+  }
+
+  if(_lastState==LOW && val==HIGH){
+    _lastPressed=millis();
+    _lastState=val;    
+  }
+  else if(_lastState==HIGH && val==LOW){
+    unsigned long dif= millis()-_lastPressed;
+    if(dif>_longPressDuration)
+      Serial.println("Long press"+String(_currentPin));
+    Serial.println("dif:"+String(dif));
+    _lastPressed=val;
+    _lastPressed=0;
+  }
+    _lastState=val;
     return val;
 }
 
-bool FreeButton::safeRead() {
+bool FreeButton::SafeRead() {
   if(digitalRead(_currentPin)==HIGH)
     return digitalRead(_currentPin);
   return LOW;
