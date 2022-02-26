@@ -15,26 +15,31 @@ FreeButton::FreeButton(int pin, bool pullup_enable = true)
 int FreeButton::Read()
 {
   int val = SafeRead();
+  bool longPressIsCalled = false;
 
-  if(_pressed_callback && val){
+  if(_long_pressed_callback){
+    if(_lastState==LOW && val==HIGH){
+      _lastPressed=millis();
+      _lastState=val;    
+    }
+    else if(_lastState==HIGH && val==LOW){
+      unsigned long dif= millis()-_lastPressed;
+      if(dif>_longPressDuration){
+        longPressIsCalled = true;
+        _long_pressed_callback();
+      }
+      _lastPressed=val;
+      _lastPressed=0;
+    }
+  }
+
+  if(_pressed_callback && val && !longPressIsCalled){
     _pressed_callback();
   }
-  else if(_un_pressed_callback && _lastState == HIGH){
+  else if(_un_pressed_callback && _lastState == HIGH && val == LOW && !longPressIsCalled){
     _un_pressed_callback();
-  }
+  }  
 
-  if(_lastState==LOW && val==HIGH){
-    _lastPressed=millis();
-    _lastState=val;    
-  }
-  else if(_lastState==HIGH && val==LOW){
-    unsigned long dif= millis()-_lastPressed;
-    if(dif>_longPressDuration)
-      Serial.println("Long press"+String(_currentPin));
-    Serial.println("dif:"+String(dif));
-    _lastPressed=val;
-    _lastPressed=0;
-  }
     _lastState=val;
     return val;
 }
@@ -54,7 +59,7 @@ void FreeButton::OnUnPressed(f callback){
 }
 
 void FreeButton::OnPressedForDuration(f callback, unsigned int duration){
-  _pressed_callback = callback;
+  _long_pressed_callback = callback;
   _longPressDuration = duration;
 }
 

@@ -12,6 +12,7 @@ class FreeButton{
     protected:
         f _pressed_callback;
         f _un_pressed_callback;
+        f _long_pressed_callback;
         f _pressed_for_duration_callback;
         bool SafeRead();
 
